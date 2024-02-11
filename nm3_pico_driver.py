@@ -57,21 +57,41 @@ class NM3Driver:
             raise Exception("Incorrect Response")
         
     def ping(self, address):
-        sound_velocity = 1500
-        c = 0.00003125
-        self.send_command("$P"+address)
+        command = f"$P{address:03d}"
+        self.send_command(command)
+        
+        # Wait for command acknowledgment
+        ack = self.read_response()
+        if ack is None or not ack.startswith('$P'):
+            print("No acknowledgment received")
+            return None
+        
+        # Wait for range response or timeout
         response = self.read_response()
+        if response is None:
+            print("No range response received")
+            return None
+
         if response.startswith('#R'):
             raw_distance = int(response.split("T")[1])
-            distance = raw_distance*sound_velocity*c
+            sound_velocity = 1500  # m/s in water
+            c = 0.00003125  # Conversion factor
+            distance = raw_distance * sound_velocity * c
             return distance
-        if not response:
-            raise Exception("No Response")
-        if not response.startswith('#A'):
-            raise Exception("Incorrect Response")
+        elif response.startswith('#TO'):
+            print("Timeout waiting for a response from the target modem")
+            return None
+        else:
+            print("Unexpected response:", response)
+            return None
         
+    def send_unicast_message(self, address, message):
+        message_length = len(message)
+        command = f"$U{address:03d}{message_length:02d}{message}"
+        self.send_command(command)
+        return self.read_response()
         
-pico = NM3Driver()
-pico.connect()
-voltage = pico.get_voltage()
-print(f"Voltage: {voltage}")
+#pico = NM3Driver()
+#pico.connect()
+#voltage = pico.get_voltage()
+#print(f"Voltage: {voltage}")
