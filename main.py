@@ -9,3 +9,12 @@
 # Last Updated  : 11th February 2024                                                                    #
 #########################################################################################################
 
+from nm3_pico_driver import NM3Driver
+
+pico = NM3Driver()
+pico.connect()
+addr = pico.get_address()
+print(f"Address: {addr}")
+
+voltage = pico.get_voltage()
+print(f"Voltage: {voltage}")
