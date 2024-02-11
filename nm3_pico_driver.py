@@ -1,6 +1,6 @@
 #########################################################################################################
 # Filename      : nm3_pico_driver.py                                                                    #
-# Version       : 0.1.0                                                                                 #
+# Version       : 0.1.3                                                                                #
 # Description   : Driver for interfacing with the NanoModem V3.2 acoustic modem on Raspberry Pi Pico W. #
 # Author        : Dean Rowlett                                                                          #
 # Target        : Raspberry Pi Pico W with MicroPython                                                  #
@@ -44,8 +44,34 @@ class NM3Driver:
         if not response.startswith('#A'):
             raise Exception("Incorrect Response")
 
-
+    def get_voltage(self):
+        self.send_command('$?')
+        response = self.read_response()
+        if response.startswith('#A'):
+            raw_voltage = int(response.split("V")[1][:5])
+            voltage = raw_voltage*15/65536
+            return (voltage)
+        if not response:
+            raise Exception("No Response")
+        if not response.startswith('#A'):
+            raise Exception("Incorrect Response")
+        
+    def ping(self, address):
+        sound_velocity = 1500
+        c = 0.00003125
+        self.send_command("$P"+address)
+        response = self.read_response()
+        if response.startswith('#R'):
+            raw_distance = int(response.split("T")[1])
+            distance = raw_distance*sound_velocity*c
+            return distance
+        if not response:
+            raise Exception("No Response")
+        if not response.startswith('#A'):
+            raise Exception("Incorrect Response")
+        
+        
 pico = NM3Driver()
 pico.connect()
-addr = pico.get_address()
-print(f"Address: {addr}")
+voltage = pico.get_voltage()
+print(f"Voltage: {voltage}")
