@@ -18,3 +18,6 @@ print(f"Address: {addr}")
 
 voltage = pico.get_voltage()
 print(f"Voltage: {voltage}")
+distance = pico.ping(169)
+
+print(f"Distance to modem 169: {distance}")
