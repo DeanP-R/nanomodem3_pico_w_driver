@@ -1,7 +1,7 @@
 #########################################################################################################
 # Filename      : nmain.py                                                                              #
-# Version       : 0.1.0                                                                                 #
-# Description   : Main program for handling communications for MEng ROpeless Fishing Gear Demonstrator. #
+# Version       : 0.0.1                                                                                 #
+# Description   : Main program for handling communications for MEng Ropeless Fishing Gear Demonstrator. #
 # Author        : Dean Rowlett                                                                          #
 # Target        : Raspberry Pi Pico W with MicroPython                                                  #
 # Interpreter   : MicroPython v1.22.1                                                                   #
