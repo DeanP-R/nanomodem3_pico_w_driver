@@ -10,6 +10,8 @@
 #########################################################################################################
 
 from nm3_pico_driver import NM3Driver
+message = "TEST"
+modem = 169
 
 pico = NM3Driver()
 pico.connect()
@@ -21,3 +23,5 @@ print(f"Voltage: {voltage}")
 distance = pico.ping(169)
 
 print(f"Distance to modem 169: {distance}")
+send_test = pico.send_unicast_message(modem, message)
+print(f"Sending message: {message}. To modem: {modem}. Returning: {send_test}.")
