@@ -26,20 +26,11 @@ print(f"Distance to modem 169: {distance}")
 send_test = pico.send_unicast_message(modem, distance)
 print(f"Sending message: {message}. To modem: {modem}. Returning: {send_test}.")
 """
-class Servo:
-    def __init__(self, MIN_DUTY=300000, MAX_DUTY=2300000, pin=27, freq=50):
-        self.pwm = machine.PWM(machine.Pin(pin))
-        self.pwm.freq(freq)
-        self.MIN_DUTY = MIN_DUTY
-        self.MAX_DUTY = MAX_DUTY
-        
-    def rotateDeg(self, deg):
-        if deg < 0:
-            deg = 0
-        elif deg > 180:
-            deg = 180
-        duty_ns = int(self.MAX_DUTY - deg * (self.MAX_DUTY-self.MIN_DUTY)/180)
-        self.pwm.duty_ns(duty_ns)
+my_string = ""
 
-servo = Servo()
-servo.rotateDeg(90)
+# Calculate the hash value of the string
+hash_value = hash(my_string)
+
+# Print the string and its hash value
+print("String: ", my_string)
+print("Hash value: ", hash_value)
