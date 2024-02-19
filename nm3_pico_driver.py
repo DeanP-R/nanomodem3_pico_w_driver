@@ -91,6 +91,45 @@ class NM3Driver:
         self.send_command(command)
         return self.read_response()
         
+import hashlib
+from aes import AESModeOfOperationCTR
+import os
+
+class AESCipher:
+    def __init__(self, passphrase):
+        # Initialize the AESCipher instance with a passphrase.
+        # This passphrase will be used to generate a unique AES key.
+        
+        # The AES key is generated in the `generate_aes_key` method and stored for future use.
+        # A nonce (number used once) is also generated for use in the encryption/decryption process,
+        # ensuring that the encryption is unique each time, even with the same key and plaintext.
+        self.key = self.generate_aes_key(passphrase)
+        self.nonce = os.urandom(8)  # Generates a random 8-byte nonce for AES CTR mode
+
+    def generate_aes_key(self, passphrase):
+        # Generate a 32-byte AES key from the given passphrase.
+        # This is achieved by hashing the passphrase using SHA-256, which outputs a 32-byte hash.
+        
+        hasher = hashlib.sha256()  # Create a new SHA-256 hash object
+        hasher.update(passphrase.encode('utf-8'))  # Hash the passphrase (after encoding it to bytes)
+        return hasher.digest()  # Return the resulting 32-byte hash as the AES key
+
+    def encrypt(self, plaintext):
+        # Encrypt the given plaintext using AES in CTR (Counter) mode.
+        # This mode requires a nonce, which we generated in the constructor.
+        # The AES CTR mode is advantageous for several reasons, including allowing for stream encryption and not requiring padding.
+        
+        aes = AESModeOfOperationCTR(self.key, nonce=self.nonce)  # Initialize AES CTR mode with the key and nonce
+        return aes.encrypt(plaintext)  # Encrypt and return the plaintext
+
+    def decrypt(self, ciphertext):
+        # Decrypt the given ciphertext using AES in CTR mode.
+        # As with encryption, decryption requires the same key and nonce that were used for encryption.
+        
+        aes = AESModeOfOperationCTR(self.key, nonce=self.nonce)  # Initialize AES CTR mode with the key and nonce
+        return aes.decrypt(ciphertext)  # Decrypt and return the ciphertext
+
+
 #pico = NM3Driver()
 #pico.connect()
 #voltage = pico.get_voltage()
