@@ -26,11 +26,3 @@ print(f"Distance to modem 169: {distance}")
 send_test = pico.send_unicast_message(modem, distance)
 print(f"Sending message: {message}. To modem: {modem}. Returning: {send_test}.")
 """
-my_string = ""
-
-# Calculate the hash value of the string
-hash_value = hash(my_string)
-
-# Print the string and its hash value
-print("String: ", my_string)
-print("Hash value: ", hash_value)

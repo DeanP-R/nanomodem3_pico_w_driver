@@ -10,7 +10,15 @@
 #########################################################################################################
 from machine import UART, Pin
 import time
-
+from ucryptolib import aes
+import hashlib
+# Global debug flag
+debug = False
+TIMEOUT_SECONDS = 10
+def debug_print(message):
+    if debug:
+        print(message)
+        
 class NM3Driver:
     def __init__(self, uart_id=0, baudrate=9600, tx_pin=16, rx_pin=17):
         self.uart = UART(uart_id, baudrate=baudrate)
@@ -27,8 +35,9 @@ class NM3Driver:
         response = bytearray()
         while time.ticks_diff(end_time, time.ticks_ms()) > 0:
             if self.uart.any():
-                byte = self.uart.read(1)
+                byte = self.uart.read()
                 response.extend(byte)
+                debug_print(f"Data Received: {response}")
                 if response.endswith(b'\r\n'):  # End of message
                     break
         return response.decode()
@@ -40,23 +49,67 @@ class NM3Driver:
             raise Exception("No Response")
         if response.startswith('#A'):
             addr = response.split('V')[0][2:]
-            return int(addr)
-        if not response.startswith('#A'):
-            raise Exception("Incorrect Response")
-
-    def get_voltage(self):
-        self.send_command('$?')
-        response = self.read_response()
-        if response.startswith('#A'):
-            raw_voltage = int(response.split("V")[1][:5])
-            voltage = raw_voltage*15/65536
-            return (voltage)
-        if not response:
-            raise Exception("No Response")
+            voltage_raw = int(response.split('V')[1])
+            voltage = voltage_raw * 15 / 65536
+            return int(addr), voltage
         if not response.startswith('#A'):
             raise Exception("Incorrect Response")
         
+    def get_voltage(self, address):
+        command = f"$V{address:03d}"
+        debug_print(f"Voltage Command: {command}")
+        self.send_command(command)
+        
+        # Wait for acknowledgment
+        ack_received = False
+        start_time = time.time()
+        while not ack_received:
+            response = self.read_response()
+            if response:
+                if response.startswith(f"$V{address:03d}"):
+                    ack_received = True
+                elif time.time() - start_time > TIMEOUT_SECONDS:
+                    raise TimeoutError("Acknowledgment timeout")
+
+        # Wait for the actual response
+        start_time = time.time()
+        while True:
+            response = self.read_response()
+            if response:
+                if response.startswith(f"#B{address:03d}"):
+                    raw_voltage = int(response.split("V")[1][:5])
+                    voltage = raw_voltage*15/65536
+                    return (voltage)
+                elif time.time() - start_time > TIMEOUT_SECONDS:
+                    raise TimeoutError("Response timeout")
+
+    def query_modem(self):
+        self.send_command('$?')
+        
+        # Wait for the actual response
+        start_time = time.time()
+        while True:
+            response = self.read_response()
+            if response:
+                if response.startswith('#A'):
+                    parts = response.split('V')
+                    addr = int(parts[0][2:])
+                    voltage_raw = int(parts[1])
+                    voltage = voltage_raw * 15 / 65536
+                    return addr, voltage
+                elif time.time() - start_time > TIMEOUT_SECONDS:
+                    raise TimeoutError("Response timeout")
+            elif time.time() - start_time > TIMEOUT_SECONDS:
+                raise TimeoutError("Response timeout")
+
+
+
+
+
+        
     def ping(self, address):
+        water = 1500 	# 1500m/s in water
+        air = 340 		# 340m/s in air
         command = f"$P{address:03d}"
         self.send_command(command)
         
@@ -69,68 +122,36 @@ class NM3Driver:
         # Wait for range response or timeout
         response = self.read_response()
         if response is None:
-            print("No range response received")
+            debug_print(f"No range response received: {response}")
             return None
 
         if response.startswith('#R'):
             raw_distance = int(response.split("T")[1])
-            sound_velocity = 1500  # m/s in water
+            sound_velocity = air 
             c = 0.00003125  # Conversion factor
             distance = raw_distance * sound_velocity * c
             return distance
         elif response.startswith('#TO'):
-            print("Timeout waiting for a response from the target modem")
+            debug_print(f"Timeout waiting for a response from the target modem: {response}")
             return None
         else:
-            print("Unexpected response:", response)
+            debug_print(f"Unexpected response: {response}")
             return None
         
     def send_unicast_message(self, address, message):
         message_length = len(message)
         command = f"$U{address:03d}{message_length:02d}{message}"
         self.send_command(command)
+        debug_print(f"Sending Command: {command}")
         return self.read_response()
-        
-import hashlib
-from aes import AESModeOfOperationCTR
-import os
-
-class AESCipher:
-    def __init__(self, passphrase):
-        # Initialize the AESCipher instance with a passphrase.
-        # This passphrase will be used to generate a unique AES key.
-        
-        # The AES key is generated in the `generate_aes_key` method and stored for future use.
-        # A nonce (number used once) is also generated for use in the encryption/decryption process,
-        # ensuring that the encryption is unique each time, even with the same key and plaintext.
-        self.key = self.generate_aes_key(passphrase)
-        self.nonce = os.urandom(8)  # Generates a random 8-byte nonce for AES CTR mode
-
-    def generate_aes_key(self, passphrase):
-        # Generate a 32-byte AES key from the given passphrase.
-        # This is achieved by hashing the passphrase using SHA-256, which outputs a 32-byte hash.
-        
-        hasher = hashlib.sha256()  # Create a new SHA-256 hash object
-        hasher.update(passphrase.encode('utf-8'))  # Hash the passphrase (after encoding it to bytes)
-        return hasher.digest()  # Return the resulting 32-byte hash as the AES key
-
-    def encrypt(self, plaintext):
-        # Encrypt the given plaintext using AES in CTR (Counter) mode.
-        # This mode requires a nonce, which we generated in the constructor.
-        # The AES CTR mode is advantageous for several reasons, including allowing for stream encryption and not requiring padding.
-        
-        aes = AESModeOfOperationCTR(self.key, nonce=self.nonce)  # Initialize AES CTR mode with the key and nonce
-        return aes.encrypt(plaintext)  # Encrypt and return the plaintext
-
-    def decrypt(self, ciphertext):
-        # Decrypt the given ciphertext using AES in CTR mode.
-        # As with encryption, decryption requires the same key and nonce that were used for encryption.
-        
-        aes = AESModeOfOperationCTR(self.key, nonce=self.nonce)  # Initialize AES CTR mode with the key and nonce
-        return aes.decrypt(ciphertext)  # Decrypt and return the ciphertext
 
 
-#pico = NM3Driver()
-#pico.connect()
-#voltage = pico.get_voltage()
-#print(f"Voltage: {voltage}")
+pico = NM3Driver(uart_id=0, baudrate=9600, tx_pin=16, rx_pin=17)
+pico.connect()
+voltage_115 = pico.get_voltage(115)
+print(f"VoLTage on 115: {voltage_115}")
+address, v = pico.get_address()
+print(f"Address: {address} Volts: {v}")
+ping = pico.ping(115)
+print(f"Distance to 115: {ping}")
+pico.send_unicast_message(115, "RELEASE")
