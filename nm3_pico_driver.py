@@ -1,12 +1,12 @@
 #########################################################################################################
 # Filename      : nm3_pico_driver.py                                                                    #
-# Version       : 0.1.3                                                                                #
+# Version       : 0.2.0                                                                                 #
 # Description   : Driver for interfacing with the NanoModem V3.2 acoustic modem on Raspberry Pi Pico W. #
 # Author        : Dean Rowlett                                                                          #
 # Target        : Raspberry Pi Pico W with MicroPython                                                  #
 # Interpreter   : MicroPython v1.22.1                                                                   #
 # IDE           : Thonny 4.1.4                                                                          #
-# Last Updated  : 11th February 2024                                                                    #
+# Last Updated  : 22nd February 2024                                                                    #
 #########################################################################################################
 from machine import UART, Pin
 import time
