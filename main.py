@@ -25,10 +25,10 @@ while True:
     response = pico.read_response().strip()  # Strip whitespace from response
     print(f"Response: '{response}'")  
     if response == '#U07RELEASE':
-        servo.move(90)
+        servo.move(180)
         print("Driving Servo to unlock")
     elif response:  # Only attempt to lock if there's a non-empty response
-        servo.move(180)
+        servo.move(90)
         print("Driving Servo to lock")
     else:
         print("No response or awaiting further instructions")
