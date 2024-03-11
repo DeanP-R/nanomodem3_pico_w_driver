@@ -144,5 +144,18 @@ class NM3Driver:
         self.send_command(command)
         debug_print(f"Sending Command: {command}")
         return self.read_response()
+    
+    def send_release_command(self, address):
+        message_length = len("RELEASE")
+        command = f"$U{address:03d}{message_length:02d}{"RELEASE"}"
+        self.send_command(command)
+        debug_print(f"Sending Command: {command}")
+        return self.read_response()
 
+    def send_lock_command(self, address):
+        message_length = len("LOCK")
+        command = f"$U{address:03d}{message_length:02d}{"LOCK"}"
+        self.send_command(command)
+        debug_print(f"Sending Command: {command}")
+        return self.read_response()
 
