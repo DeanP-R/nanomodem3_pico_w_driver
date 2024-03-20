@@ -1,3 +1,17 @@
+#########################################################################################################
+# Filename      : surface_main.py                                                                       #
+# Version       : 0.1.0                                                                                 #
+# Description   : Main program for handling communications for MEng Ropeless Fishing Gear Demonstrator. #
+#                 Designed for the embedded system on water surface.Connects to user app through        #
+#                 bluetooth. User can then send release commands to selected modem on sea floor.        #
+#                 toggle magnet on.                                                                     #
+# Author        : Ross Porteuous                                                                        #
+# Target        : Raspberry Pi Pico W with MicroPython                                                  #
+# Interpreter   : MicroPython v1.22.1                                                                   #
+# IDE           : Thonny 4.1.4                                                                          #
+# Last Updated  : 20th March 2024                                                                       #
+#########################################################################################################
+
 import sys
 import aioble
 import bluetooth
