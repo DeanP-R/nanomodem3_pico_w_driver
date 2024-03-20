@@ -54,7 +54,7 @@ The hardware for this project is built on custom-designed PCBs that incorporate 
 ## Authors
 - Dean Rowlett
 - Ross Porteuous
-- 
+
 ## Note on Collaboration and Environmental Impact
 We're actively seeking collaboration with veterinarians and environmental scientists to assess and mitigate any potential environmental impact of deploying this system in marine environments. Our goal is to ensure the system is both effective for its intended purpose and sustainable from an ecological perspective.
 
