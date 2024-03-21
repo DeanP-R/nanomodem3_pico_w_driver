@@ -102,11 +102,7 @@ class NM3Driver:
             elif time.time() - start_time > TIMEOUT_SECONDS:
                 raise TimeoutError("Response timeout")
 
-
-
-
-
-        
+      
     def ping(self, address):
         water = 1500    # 1500m/s in water
         air = 340       # 340m/s in air
@@ -116,27 +112,24 @@ class NM3Driver:
         # Wait for command acknowledgment
         ack = self.read_response()
         if ack is None or not ack.startswith('$P'):
-            print("No acknowledgment received")
-            return None
+            raise Exception("No acknowledgment received")
         
         # Wait for range response or timeout
         response = self.read_response()
         if response is None:
-            debug_print(f"No range response received: {response}")
-            return None
+            raise Exception("No response received")
 
         if response.startswith('#R'):
             raw_distance = int(response.split("T")[1])
-            sound_velocity = air 
+            sound_velocity = water 
             c = 0.00003125  # Conversion factor
             distance = raw_distance * sound_velocity * c
             return distance
         elif response.startswith('#TO'):
-            debug_print(f"Timeout waiting for a response from the target modem: {response}")
-            return None
+            raise TimeoutError("Response Timeout")
         else:
-            debug_print(f"Unexpected response: {response}")
-            return None
+            raise Exception("Unexpected Response")
+
         
     def send_unicast_message(self, address, message):
         message_length = len(message)
